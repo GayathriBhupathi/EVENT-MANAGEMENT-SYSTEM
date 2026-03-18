@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EventHub{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #0a0a0f; --surface: #111118; --card: #16161f;
+            --border: #1e1e2e; --accent: #7c3aed; --accent2: #06b6d4;
+            --green: #10b981; --red: #ef4444; --yellow: #f59e0b;
+            --text: #e2e8f0; --muted: #64748b; --radius: 12px;
+        }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+        nav { background: rgba(17,17,24,.95); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; padding: 0 2rem; }
+        .nav-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+        .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem; color: var(--text); text-decoration: none; }
+        .logo span { color: var(--accent); }
+        .nav-links { display: flex; align-items: center; gap: 8px; }
+        .nav-links a { color: var(--muted); text-decoration: none; padding: 8px 14px; border-radius: 8px; font-size: .9rem; font-weight: 500; transition: all .2s; }
+        .nav-links a:hover { color: var(--text); background: var(--border); }
+
+        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 20px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: .9rem; border: none; cursor: pointer; text-decoration: none; transition: all .2s; }
+        .btn-primary  { background: var(--accent); color: #fff; }
+        .btn-primary:hover { background: #6d28d9; }
+        .btn-secondary { background: var(--border); color: var(--text); }
+        .btn-danger   { background: var(--red); color: #fff; }
+        .btn-outline  { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn-outline:hover { background: var(--border); }
+        .btn-sm { padding: 6px 14px; font-size: .82rem; }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+
+        .alert { padding: 12px 16px; border-radius: var(--radius); margin-bottom: 8px; font-size: .9rem; font-weight: 500; }
+        .alert-success { background: rgba(16,185,129,.15); border: 1px solid rgba(16,185,129,.3); color: #34d399; }
+        .alert-error   { background: rgba(239,68,68,.15);  border: 1px solid rgba(239,68,68,.3);  color: #f87171; }
+        .alert-warning { background: rgba(245,158,11,.15); border: 1px solid rgba(245,158,11,.3); color: #fbbf24; }
+
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+        .badge-upcoming  { background: rgba(124,58,237,.2);  color: #a78bfa; }
+        .badge-ongoing   { background: rgba(16,185,129,.2);  color: #34d399; }
+        .badge-completed { background: rgba(100,116,139,.2); color: #94a3b8; }
+        .badge-cancelled { background: rgba(239,68,68,.2);   color: #f87171; }
+
+        .form-control { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px 14px; font-family: 'DM Sans', sans-serif; font-size: .9rem; }
+        .form-control:focus { outline: none; border-color: var(--accent); }
+        .form-label { display: block; font-size: .85rem; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
+        .form-group { margin-bottom: 1.2rem; }
+        .form-check { display: flex; align-items: center; gap: 8px; }
+        .form-check-input { width: 16px; height: 16px; accent-color: var(--accent); }
+
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+        .page-header { margin-bottom: 2rem; }
+        .page-header h1 { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; }
+        .page-header p { color: var(--muted); margin-top: 4px; }
+        footer { border-top: 1px solid var(--border); padding: 2rem; text-align: center; color: var(--muted); font-size: .85rem; margin-top: 4rem; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+<nav>
+    <div class="nav-inner">
+        <a class="logo" href="{% url 'home' %}">⚡ Event<span>Hub</span></a>
+        <div class="nav-links">
+            <a href="{% url 'home' %}">Events</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'my_events' %}">My Events</a>
+                <a href="{% url 'event_create' %}" class="btn btn-primary btn-sm">+ Create</a>
+                <a href="{% url 'logout' %}" class="btn btn-outline btn-sm">Logout</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="btn btn-outline btn-sm">Login</a>
+                <a href="{% url 'register' %}" class="btn btn-primary btn-sm">Sign Up</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+{% if messages %}
+<div class="container" style="padding-top:1rem; padding-bottom:0;">
+    {% for msg in messages %}
+    <div class="alert alert-{{ msg.tags }}">{{ msg }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% block content %}{% endblock %}
+
+<footer>© 2024 EventHub · Built with Django</footer>
+</body>
+</html>

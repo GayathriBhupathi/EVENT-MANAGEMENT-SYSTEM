@@ -1,0 +1,62 @@
+{% extends 'events/base.html' %}
+{% block title %}{{ action }} Event{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-layout { max-width: 720px; margin: 0 auto; }
+.form-section { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.8rem; margin-bottom: 1.5rem; }
+.form-section h2 { font-size: .78rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 1.2rem; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media(max-width:600px){ .form-grid { grid-template-columns: 1fr; } }
+.errorlist { color: var(--red); font-size: .82rem; list-style: none; padding: 0; margin-top: 4px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="form-layout">
+        <div class="page-header">
+            <a href="{% url 'home' %}" style="color:var(--muted); font-size:.9rem; text-decoration:none;">← Back</a>
+            <h1 style="margin-top:.5rem;">{{ action }} Event</h1>
+        </div>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-section">
+                <h2>Basic Info</h2>
+                <div class="form-group"><label class="form-label">Title *</label>{{ form.title }}{{ form.title.errors }}</div>
+                <div class="form-group"><label class="form-label">Description *</label>{{ form.description }}{{ form.description.errors }}</div>
+                <div class="form-grid">
+                    <div class="form-group"><label class="form-label">Category</label>{{ form.category }}</div>
+                    <div class="form-group"><label class="form-label">Status</label>{{ form.status }}</div>
+                </div>
+                <div class="form-group"><label class="form-label">Location *</label>{{ form.location }}</div>
+            </div>
+            <div class="form-section">
+                <h2>Date & Time</h2>
+                <div class="form-grid">
+                    <div class="form-group"><label class="form-label">Start *</label>{{ form.start_date }}{{ form.start_date.errors }}</div>
+                    <div class="form-group"><label class="form-label">End *</label>{{ form.end_date }}{{ form.end_date.errors }}</div>
+                </div>
+            </div>
+            <div class="form-section">
+                <h2>Tickets & Capacity</h2>
+                <div class="form-grid">
+                    <div class="form-group"><label class="form-label">Max Attendees</label>{{ form.max_attendees }}</div>
+                    <div class="form-group"><label class="form-label">Ticket Price (₹)</label>{{ form.ticket_price }}</div>
+                </div>
+                <div class="form-check">{{ form.is_free }}<label class="form-label" style="margin-bottom:0;">Free Event</label></div>
+            </div>
+            <div class="form-section">
+                <h2>Event Image</h2>
+                <div class="form-group"><label class="form-label">Upload Image (optional)</label>{{ form.image }}</div>
+                {% if event.image %}<img src="{{ event.image.url }}" style="height:80px; border-radius:8px; object-fit:cover; margin-top:10px;">{% endif %}
+            </div>
+            {% if form.non_field_errors %}<div class="alert alert-error">{{ form.non_field_errors }}</div>{% endif %}
+            <div style="display:flex; gap:1rem;">
+                <button type="submit" class="btn btn-primary">{{ action }} Event</button>
+                <a href="{% url 'home' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

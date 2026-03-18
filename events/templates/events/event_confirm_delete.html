@@ -1,0 +1,22 @@
+{% extends 'events/base.html' %}
+{% block title %}Delete Event{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:500px;">
+    <div class="card" style="padding:2rem; text-align:center; margin-top:3rem;">
+        <div style="font-size:3rem; margin-bottom:1rem;">🗑️</div>
+        <h2 style="font-family:'Syne',sans-serif; font-size:1.4rem; margin-bottom:.5rem;">Delete Event?</h2>
+        <p style="color:var(--muted); margin-bottom:1.5rem;">
+            You're about to delete <strong style="color:var(--text);">{{ event.title }}</strong>.
+            All registrations will be removed. This cannot be undone.
+        </p>
+        <div style="display:flex; gap:1rem; justify-content:center;">
+            <a href="{% url 'event_detail' event.pk %}" class="btn btn-secondary">Cancel</a>
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Yes, Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends 'events/base.html' %}
+{% block title %}EventHub – Discover Events{% endblock %}
+
+{% block extra_css %}
+<style>
+.hero { background: linear-gradient(135deg, rgba(124,58,237,.15), rgba(6,182,212,.08)); border-bottom: 1px solid var(--border); padding: 3rem 2rem; text-align: center; }
+.hero h1 { font-family: 'Syne', sans-serif; font-size: clamp(2rem,5vw,3.5rem); font-weight: 800; }
+.hero h1 span { color: var(--accent); }
+.hero p { color: var(--muted); font-size: 1.05rem; max-width: 500px; margin: .8rem auto 1.5rem; }
+.stats { display: flex; justify-content: center; gap: 2rem; margin-top: 1.5rem; }
+.stat strong { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800; color: var(--accent); display: block; }
+.stat span { font-size: .8rem; color: var(--muted); }
+
+.filters { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem 1.5rem; margin-bottom: 2rem; display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; }
+.filters .form-group { margin-bottom: 0; flex: 1; min-width: 150px; }
+
+.events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+.event-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: transform .2s, border-color .2s; display: flex; flex-direction: column; }
+.event-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+.event-card-img { height: 180px; background: linear-gradient(135deg, #1e1e2e, #2a1a4e); display: flex; align-items: center; justify-content: center; font-size: 3rem; }
+.event-card-img img { width: 100%; height: 100%; object-fit: cover; }
+.event-card-body { padding: 1.2rem; flex: 1; }
+.event-card h3 { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; margin: .5rem 0; }
+.event-card h3 a { color: var(--text); text-decoration: none; }
+.event-card h3 a:hover { color: var(--accent); }
+.event-info { color: var(--muted); font-size: .85rem; margin-bottom: .4rem; }
+.event-card-footer { padding: 1rem 1.2rem; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.seats { font-size: .82rem; color: var(--muted); }
+.seats.full { color: var(--red); }
+.price { font-size: .9rem; font-weight: 600; color: var(--green); }
+.empty-state { text-align: center; padding: 4rem 2rem; color: var(--muted); }
+.empty-state h3 { font-family: 'Syne', sans-serif; font-size: 1.3rem; margin-bottom: .5rem; color: var(--text); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>Discover Amazing<br><span>Events Near You</span></h1>
+    <p>Browse, register, and manage events all in one place.</p>
+    {% if not user.is_authenticated %}
+    <a href="{% url 'register' %}" class="btn btn-primary">Get Started Free</a>
+    {% endif %}
+    <div class="stats">
+        <div class="stat"><strong>{{ total_events }}</strong><span>Total Events</span></div>
+        <div class="stat"><strong>{{ upcoming_count }}</strong><span>Upcoming</span></div>
+    </div>
+</div>
+
+<div class="container">
+    <form method="get" class="filters">
+        <div class="form-group">
+            <label class="form-label">Search</label>
+            <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search events…">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Category</label>
+            <select name="category" class="form-control">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-control">
+                <option value="">All</option>
+                <option value="upcoming"  {% if selected_status == 'upcoming'  %}selected{% endif %}>Upcoming</option>
+                <option value="ongoing"   {% if selected_status == 'ongoing'   %}selected{% endif %}>Ongoing</option>
+                <option value="completed" {% if selected_status == 'completed' %}selected{% endif %}>Completed</option>
+            </select>
+        </div>
+        <div class="form-group" style="flex:0;">
+            <label class="form-label">&nbsp;</label>
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </form>
+
+    {% if events %}
+    <div class="events-grid">
+        {% for event in events %}
+        <div class="event-card">
+            <div class="event-card-img">
+                {% if event.image %}<img src="{{ event.image.url }}" alt="{{ event.title }}">{% else %}🎉{% endif %}
+            </div>
+            <div class="event-card-body">
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <span class="badge badge-{{ event.status }}">{{ event.get_status_display }}</span>
+                    {% if event.category %}<span style="font-size:.78rem; color:var(--muted);">{{ event.category.name }}</span>{% endif %}
+                </div>
+                <h3><a href="{% url 'event_detail' event.pk %}">{{ event.title }}</a></h3>
+                <div class="event-info">📅 {{ event.start_date|date:"M d, Y · g:i A" }}</div>
+                <div class="event-info">📍 {{ event.location }}</div>
+                <div class="event-info">👤 {{ event.organizer.get_full_name|default:event.organizer.username }}</div>
+            </div>
+            <div class="event-card-footer">
+                {% if event.is_full %}<span class="seats full">● Full</span>{% else %}<span class="seats">{{ event.available_seats }} seats left</span>{% endif %}
+                <span class="price">{% if event.is_free %}Free{% else %}₹{{ event.ticket_price }}{% endif %}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div style="font-size:3rem; margin-bottom:1rem;">🔍</div>
+        <h3>No Events Found</h3>
+        <p>Try adjusting your filters or <a href="{% url 'event_create' %}" style="color:var(--accent);">create a new event</a>.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends 'events/base.html' %}
+{% block title %}My Events{% endblock %}
+
+{% block extra_css %}
+<style>
+.events-table { width: 100%; border-collapse: collapse; }
+.events-table th { background: var(--surface); padding: 10px 14px; font-size: .8rem; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); text-align: left; border-bottom: 1px solid var(--border); }
+.events-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: .9rem; vertical-align: middle; }
+.events-table tr:hover td { background: var(--surface); }
+.events-table a { color: var(--accent); text-decoration: none; font-weight: 500; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <div><h1>My Events</h1><p>Manage your events and registrations</p></div>
+        <a href="{% url 'event_create' %}" class="btn btn-primary">+ Create Event</a>
+    </div>
+
+    <h2 style="font-family:'Syne',sans-serif; font-size:1.1rem; margin-bottom:1rem;">Events I'm Organizing</h2>
+    {% if organized %}
+    <div class="card" style="overflow-x:auto; margin-bottom:2.5rem;">
+        <table class="events-table">
+            <thead><tr><th>Event</th><th>Date</th><th>Status</th><th>Registrations</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for event in organized %}
+            <tr>
+                <td><a href="{% url 'event_detail' event.pk %}">{{ event.title }}</a></td>
+                <td>{{ event.start_date|date:"M d, Y" }}</td>
+                <td><span class="badge badge-{{ event.status }}">{{ event.get_status_display }}</span></td>
+                <td>{{ event.registered_count }} / {{ event.max_attendees }}</td>
+                <td>
+                    <a href="{% url 'event_edit' event.pk %}" class="btn btn-secondary btn-sm">Edit</a>
+                    <a href="{% url 'event_attendees' event.pk %}" class="btn btn-outline btn-sm">Attendees</a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card" style="padding:2rem; text-align:center; color:var(--muted); margin-bottom:2.5rem;">
+        No events yet. <a href="{% url 'event_create' %}" style="color:var(--accent);">Create your first event!</a>
+    </div>
+    {% endif %}
+
+    <h2 style="font-family:'Syne',sans-serif; font-size:1.1rem; margin-bottom:1rem;">Events I'm Attending</h2>
+    {% if registrations %}
+    <div class="card" style="overflow-x:auto;">
+        <table class="events-table">
+            <thead><tr><th>Event</th><th>Date</th><th>Location</th><th>Status</th><th>Registered On</th></tr></thead>
+            <tbody>
+            {% for reg in registrations %}
+            <tr>
+                <td><a href="{% url 'event_detail' reg.event.pk %}">{{ reg.event.title }}</a></td>
+                <td>{{ reg.event.start_date|date:"M d, Y" }}</td>
+                <td>{{ reg.event.location }}</td>
+                <td><span class="badge badge-{{ reg.event.status }}">{{ reg.event.get_status_display }}</span></td>
+                <td style="color:var(--muted); font-size:.82rem;">{{ reg.registered_at|date:"M d, Y" }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card" style="padding:2rem; text-align:center; color:var(--muted);">
+        Not attending any events. <a href="{% url 'home' %}" style="color:var(--accent);">Browse events!</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

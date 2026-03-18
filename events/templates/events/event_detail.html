@@ -1,0 +1,102 @@
+{% extends 'events/base.html' %}
+{% block title %}{{ event.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.detail-layout { display: grid; grid-template-columns: 1fr 340px; gap: 2rem; align-items: start; }
+@media(max-width:768px){ .detail-layout { grid-template-columns: 1fr; } }
+.event-hero { height: 300px; background: linear-gradient(135deg,#1e1e2e,#2a1a4e); border-radius: var(--radius); overflow: hidden; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: center; font-size: 5rem; }
+.event-hero img { width: 100%; height: 100%; object-fit: cover; }
+.event-title { font-family: 'Syne',sans-serif; font-size: 2rem; font-weight: 800; margin-bottom: 1rem; line-height: 1.2; }
+.info-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); color: var(--muted); font-size: .9rem; }
+.info-row .label { color: var(--text); font-weight: 500; min-width: 120px; }
+.sidebar-card { padding: 1.5rem; }
+.sidebar-card h3 { font-family: 'Syne',sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 1rem; }
+.seats-bar { background: var(--border); border-radius: 4px; height: 6px; margin: 10px 0; overflow: hidden; }
+.seats-fill { background: var(--accent); height: 100%; border-radius: 4px; }
+.action-btns { display: flex; flex-direction: column; gap: 8px; margin-top: 1rem; }
+.org-info { display: flex; align-items: center; gap: 10px; margin-top: 1rem; }
+.org-avatar { width: 36px; height: 36px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="{% url 'home' %}" style="color:var(--muted); text-decoration:none; font-size:.9rem; display:inline-block; margin-bottom:1rem;">← Back to Events</a>
+    <div class="detail-layout">
+        <div>
+            <div class="event-hero">
+                {% if event.image %}<img src="{{ event.image.url }}" alt="{{ event.title }}">{% else %}🎉{% endif %}
+            </div>
+            <div style="display:flex; gap:10px; margin-bottom:1rem; flex-wrap:wrap;">
+                <span class="badge badge-{{ event.status }}">{{ event.get_status_display }}</span>
+                {% if event.category %}<span class="badge" style="background:rgba(6,182,212,.15); color:#22d3ee;">{{ event.category.name }}</span>{% endif %}
+                {% if event.is_free %}<span class="badge" style="background:rgba(16,185,129,.15); color:#34d399;">Free</span>{% endif %}
+            </div>
+            <h1 class="event-title">{{ event.title }}</h1>
+            <div class="info-row"><span class="label">📅 Start</span>{{ event.start_date|date:"l, M d Y · g:i A" }}</div>
+            <div class="info-row"><span class="label">⏰ End</span>{{ event.end_date|date:"l, M d Y · g:i A" }}</div>
+            <div class="info-row"><span class="label">📍 Location</span>{{ event.location }}</div>
+            <div class="info-row"><span class="label">💰 Price</span>{% if event.is_free %}Free{% else %}₹{{ event.ticket_price }}{% endif %}</div>
+            <div class="info-row"><span class="label">🎟️ Capacity</span>{{ event.max_attendees }} attendees</div>
+            <div style="margin-top:1.5rem;">
+                <p style="color:var(--muted); font-size:.8rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:.8rem;">About This Event</p>
+                <p style="line-height:1.7;">{{ event.description }}</p>
+            </div>
+        </div>
+
+        <div>
+            <div class="card sidebar-card" style="margin-bottom:1rem;">
+                <h3>Registration</h3>
+                <div style="font-size:.85rem; color:var(--muted);">
+                    <strong style="color:var(--text);">{{ event.registered_count }}</strong> / {{ event.max_attendees }} registered
+                </div>
+                <div class="seats-bar">
+                    <div class="seats-fill" style="width:{% widthratio event.registered_count event.max_attendees 100 %}%;"></div>
+                </div>
+                <div class="action-btns">
+                    {% if user.is_authenticated %}
+                        {% if event.organizer == user %}
+                            <a href="{% url 'event_edit' event.pk %}" class="btn btn-secondary">✏️ Edit Event</a>
+                            <a href="{% url 'event_attendees' event.pk %}" class="btn btn-outline">👥 Attendees</a>
+                            <a href="{% url 'event_delete' event.pk %}" class="btn btn-danger">🗑 Delete</a>
+                        {% elif is_registered %}
+                            <div style="background:rgba(16,185,129,.1); border:1px solid rgba(16,185,129,.3); padding:10px 14px; border-radius:8px; color:#34d399; text-align:center; font-size:.9rem;">✅ You're registered!</div>
+                            {% if event.status == 'upcoming' %}
+                            <form method="post" action="{% url 'cancel_registration' event.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger" style="width:100%;" onclick="return confirm('Cancel your registration?')">Cancel Registration</button>
+                            </form>
+                            {% endif %}
+                        {% elif event.is_full %}
+                            <div style="color:var(--red); text-align:center; font-size:.9rem;">This event is full.</div>
+                        {% elif event.status == 'upcoming' %}
+                            <form method="post" action="{% url 'register_event' event.pk %}">
+                                {% csrf_token %}
+                                <label class="form-label">Notes (optional)</label>
+                                {{ form.notes }}
+                                <button type="submit" class="btn btn-primary" style="width:100%; margin-top:10px;">Register Now</button>
+                            </form>
+                        {% else %}
+                            <div style="color:var(--muted); text-align:center; font-size:.9rem;">Registration closed.</div>
+                        {% endif %}
+                    {% else %}
+                        <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary">Login to Register</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card sidebar-card">
+                <h3>Organizer</h3>
+                <div class="org-info">
+                    <div class="org-avatar">{{ event.organizer.first_name.0|upper|default:event.organizer.username.0|upper }}</div>
+                    <div>
+                        <div style="font-weight:600; font-size:.9rem;">{{ event.organizer.get_full_name|default:event.organizer.username }}</div>
+                        <div style="color:var(--muted); font-size:.8rem;">Event Organizer</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

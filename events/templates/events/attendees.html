@@ -1,0 +1,45 @@
+{% extends 'events/base.html' %}
+{% block title %}Attendees – {{ event.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.attendee-row { display: flex; align-items: center; gap: 1rem; padding: 14px 1.5rem; border-bottom: 1px solid var(--border); transition: background .15s; }
+.attendee-row:last-child { border-bottom: none; }
+.attendee-row:hover { background: var(--surface); }
+.avatar { width: 38px; height: 38px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .9rem; flex-shrink: 0; }
+.summary-bar { display: flex; gap: 2rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem 1.5rem; margin-bottom: 1.5rem; }
+.summary-item strong { font-family: 'Syne',sans-serif; font-size: 1.6rem; font-weight: 800; display: block; }
+.summary-item span { font-size: .8rem; color: var(--muted); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="{% url 'event_detail' event.pk %}" style="color:var(--muted); text-decoration:none; font-size:.9rem;">← Back to Event</a>
+    <div class="page-header" style="margin-top:.5rem;">
+        <h1>Attendees</h1>
+        <p>{{ event.title }}</p>
+    </div>
+    <div class="summary-bar">
+        <div class="summary-item"><strong>{{ event.registered_count }}</strong><span>Registered</span></div>
+        <div class="summary-item"><strong>{{ event.available_seats }}</strong><span>Seats Left</span></div>
+        <div class="summary-item"><strong>{{ event.max_attendees }}</strong><span>Capacity</span></div>
+    </div>
+    <div class="card">
+        {% if registrations %}
+            {% for reg in registrations %}
+            <div class="attendee-row">
+                <div class="avatar">{{ reg.attendee.first_name.0|upper|default:reg.attendee.username.0|upper }}</div>
+                <div style="flex:1;">
+                    <strong style="font-size:.9rem; display:block;">{{ reg.attendee.get_full_name|default:reg.attendee.username }}</strong>
+                    <span style="font-size:.8rem; color:var(--muted);">{{ reg.attendee.email }} · {{ reg.registered_at|date:"M d, Y" }}</span>
+                </div>
+                <span class="badge {% if reg.status == 'confirmed' %}badge-ongoing{% else %}badge-cancelled{% endif %}">{{ reg.get_status_display }}</span>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div style="padding:3rem; text-align:center; color:var(--muted);">No registrations yet.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
